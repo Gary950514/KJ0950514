@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>畢業學分進度看板</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ec4b6;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .nav-link {
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: #555;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            font-size: 1.2rem;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .credits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .course-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        /* 重複採計項目的特別標籤 */
+        .double-count-badge {
+            font-size: 0.75rem;
+            color: #e67e22;
+            background-color: #fdf2e9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .required-badge {
+            background-color: #e1e7ff;
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .progress-container {
+            background-color: #eef2f5;
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            background-color: var(--primary-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .status-text {
+            text-align: right;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        .status-text.completed {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📊 畢業學分審查看板</h1>
+        <a href="input.html" class="nav-link">去新增/修改課程 ✏️</a>
+    </header>
+
+    <div class="summary-card">
+        <div class="summary-stats">
+            <div class="stat-box">已獲實際總學分<span id="total-earned">0</span></div>
+            <div class="stat-box">畢業總需學分<span>128</span></div>
+        </div>
+        <div class="progress-container" style="height: 16px;">
+            <div id="total-progress" class="progress-bar" style="background-color: #4fc3f7;"></div>
+        </div>
+        <div id="total-status" style="margin-top: 10px; font-size: 0.9rem;">目前總進度：0%</div>
+    </div>
+
+    <div class="credits-grid">
+        
+        <div class="course-card" id="card-gen_req">
+            <div class="card-header">
+                <div>
+                    <span class="card-title">通識必修</span><br>
+                    <span class="double-count-badge">包含通識選修學分</span>
+                </div>
+                <span class="required-badge">應修 31 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-col_req">
+            <div class="card-header">
+                <span class="card-title">院專業必修</span>
+                <span class="required-badge">應修 14 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-maj_req">
+            <div class="card-header">
+                <span class="card-title">專業必修</span>
+                <span class="required-badge">應修 44 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-maj_ele">
+            <div class="card-header">
+                <div>
+                    <span class="card-title">最低專業選修</span><br>
+                    <span class="double-count-badge">包含學程1、學程2學分</span>
+                </div>
+                <span class="required-badge">應修 39 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-inter_dis">
+            <div class="card-header">
+                <span class="card-title">跨領域學分</span>
+                <span class="required-badge">應修 15 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-gen_ele">
+            <div class="card-header">
+                <span class="card-title">通識選修</span>
+                <span class="required-badge">應修 9 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-prog_1">
+            <div class="card-header">
+                <span class="card-title">學程 1</span>
+                <span class="required-badge">應修 18 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+        <div class="course-card" id="card-prog_2">
+            <div class="card-header">
+                <span class="card-title">學程 2</span>
+                <span class="required-badge">應修 18 學分</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="status-text">計算中...</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const targets = {
+
+        gen_req: 31, col_req: 14, maj_req: 44, maj_ele: 39,
+        inter_dis: 15, gen_ele: 9, prog_1: 18, prog_2: 18
+    };
+
+    const totalRequired = 128;
+
+    let courses = JSON.parse(localStorage.getItem('academic_courses')) || [];
+
+    function calculateProgress() {
+        let earnedSums = {
+            gen_req: 0, col_req: 0, maj_req: 0, maj_ele: 0,
+            inter_dis: 0, gen_ele: 0, prog_1: 0, prog_2: 0
+        };
+
+        let totalEarned = 0;
+
+        courses.forEach(course => {
+            const credits = course.credits;
+            
+            // 1. 先歸類到原始選擇的類別
+            if (earnedSums.hasOwnProperty(course.category)) {
+                earnedSums[course.category] += credits;
+            }
+
+            // 🌟 邏輯優化 1：如果這門課是「學程1」或「學程2」，同步加進「最低專業選修」
+            if (course.category === 'prog_1' || course.category === 'prog_2') {
+                earnedSums['maj_ele'] += credits;
+            }
+
+            // 🌟 新增邏輯 2：如果這門課是「通識選修」，同步加進「通識必修」
+            if (course.category === 'gen_ele') {
+                earnedSums['gen_req'] += credits;
+            }
+
+            // 2. 計算「實際總學分」（確保不重複計算總學分）
+            totalEarned += credits;
+        });
+
+        // 更新各類別卡片視覺與進度
+        for (let cat in targets) {
+            const required = targets[cat];
+            const earned = earnedSums[cat];
+            const percentage = Math.min((earned / required) * 100, 100);
+
+            const card = document.getElementById(`card-${cat}`);
+            const progressBar = card.querySelector('.progress-bar');
+            const statusText = card.querySelector('.status-text');
+
+            progressBar.style.width = `${percentage}%`;
+
+            if (earned >= required) {
+                statusText.textContent = `解鎖成功！(已達標 ${earned}/${required})`;
+                statusText.classList.add('completed');
+                progressBar.style.backgroundColor = '#2ec4b6'; 
+            } else {
+                statusText.textContent = `已修 ${earned} / 還差 ${required - earned} 學分`;
+                statusText.classList.remove('completed');
+                progressBar.style.backgroundColor = '#4a90e2'; 
+            }
+        }
+
+        // 更新上方大總進度面板
+        document.getElementById('total-earned').textContent = totalEarned;
+        const totalPercentage = Math.min((totalEarned / totalRequired) * 100, 100).toFixed(1);
+        document.getElementById('total-progress').style.width = `${totalPercentage}%`;
+        document.getElementById('total-status').textContent = `目前畢業總進度：${totalPercentage}% (${totalEarned} / ${totalRequired})`;
+    }
+
+    calculateProgress();
+</script>
+
+</body>
+</html>

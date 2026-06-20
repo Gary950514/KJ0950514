@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程數據管理器</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ec4b6;
+            --warning-color: #f39c12;
+            --danger-color: #e71d36;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .nav-link {
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: #357abd;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            height: fit-content;
+            transition: border 0.3s;
+        }
+
+        .form-card.editing-mode {
+            border: 2px solid var(--warning-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: #24a195;
+        }
+
+        .btn-submit.btn-edit-mode {
+            background-color: var(--warning-color);
+        }
+        .btn-submit.btn-edit-mode:hover {
+            background-color: #d35400;
+        }
+
+        .btn-cancel {
+            width: 100%;
+            background-color: #aaa;
+            color: white;
+            border: none;
+            padding: 8px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .table-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .table-header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .table-card h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: #444;
+        }
+
+        /* 🌟 新增：學期總計標籤樣式 */
+        .header-total-badge {
+            font-size: 0.9rem;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            color: #666;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .grade-badge {
+            background-color: #e8f4fd;
+            color: #1e88e5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-table-edit {
+            background-color: transparent;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-table-edit:hover {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .table-header-area { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎓 課程學分管理器</h1>
+        <a href="index.html" class="nav-link">查看學分進度條 📊</a>
+    </header>
+
+    <div class="main-layout">
+        <div class="form-card" id="formCard">
+            <h3 id="formTitle" style="margin-top:0; color:#555;">新增課程數據</h3>
+            
+            <div class="form-group">
+                <label for="courseName">課程名稱</label>
+                <input type="text" id="courseName" placeholder="例如：高等微積分">
+            </div>
+
+            <div class="form-group">
+                <label for="courseGrade">修課學期</label>
+                <select id="courseGrade">
+                    <option value="1-1">大一上</option>
+                    <option value="1-2">大一下</option>
+                    <option value="2-1">大二上</option>
+                    <option value="2-2">大二下</option>
+                    <option value="3-1">大三上</option>
+                    <option value="3-2">大三下</option>
+                    <option value="4-1">大四上</option>
+                    <option value="4-2">大四下</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="courseCategory">學分類別</label>
+                <select id="courseCategory">
+                    <option value="gen_req">通識必修 (31)</option>
+                    <option value="col_req">院專業必修 (14)</option>
+                    <option value="maj_req">專業必修 (44)</option>
+                    <option value="maj_ele">最低專業選修 (39)</option>
+                    <option value="inter_dis">跨領域學分 (15)</option>
+                    <option value="gen_ele">通識選修 (9)</option>
+                    <option value="prog_1">學程1 (18)</option>
+                    <option value="prog_2">學程2 (18)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="courseCredits">學分數</label>
+                <input type="number" id="courseCredits" min="1" max="10" value="3">
+            </div>
+
+            <button class="btn-submit" id="submitBtn" onclick="handleSubmit()">儲存並新增課程</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="cancelEdit()" style="display:none;">取消修改</button>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header-area">
+                <h2>已登錄課程清單 <span id="filteredTotal" class="header-total-badge">總計：0 學分</span></h2>
+                
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="searchCategory">類別：</label>
+                        <select id="searchCategory" onchange="renderTable()">
+                            <option value="all">全部類別</option>
+                            <option value="gen_req">通識必修</option>
+                            <option value="col_req">院專業必修</option>
+                            <option value="maj_req">專業必修</option>
+                            <option value="maj_ele">最低專業選修</option>
+                            <option value="inter_dis">跨領域學分</option>
+                            <option value="gen_ele">通識選修</option>
+                            <option value="prog_1">學程1</option>
+                            <option value="prog_2">學程2</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="searchGrade">學期：</label>
+                        <select id="searchGrade" onchange="renderTable()">
+                            <option value="all">全部學期</option>
+                            <option value="1-1">大一上</option>
+                            <option value="1-2">大一下</option>
+                            <option value="2-1">大二上</option>
+                            <option value="2-2">大二下</option>
+                            <option value="3-1">大三上</option>
+                            <option value="3-2">大三下</option>
+                            <option value="4-1">大四上</option>
+                            <option value="4-2">大四下</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>學期</th>
+                        <th>課程名稱</th>
+                        <th>類別</th>
+                        <th>學分</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="courseTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const categoryMap = {
+        gen_req: "通識必修", col_req: "院專業必修", maj_req: "專業必修",
+        maj_ele: "最低專業選修", inter_dis: "跨領域學分", gen_ele: "通識選修",
+        prog_1: "學程1", prog_2: "學程2"
+    };
+
+    const gradeMap = { 
+        "1-1": "大一上", "1-2": "大一下", 
+        "2-1": "大二上", "2-2": "大二下", 
+        "3-1": "大三上", "3-2": "大三下", 
+        "4-1": "大四上", "4-2": "大四下" 
+    };
+
+    let courses = JSON.parse(localStorage.getItem('academic_courses')) || [];
+    let editTargetIndex = null; 
+
+    function renderTable() {
+        const tbody = document.getElementById('courseTableBody');
+        const filterCategory = document.getElementById('searchCategory').value;
+        const filterGrade = document.getElementById('searchGrade').value;
+        
+        tbody.innerHTML = '';
+
+        courses.forEach((course, index) => { course.originalIndex = index; });
+
+        // 依學期排序
+        const sortedCourses = [...courses].sort((a, b) => a.grade.localeCompare(b.grade));
+
+        // 篩選過濾
+        const filteredCourses = sortedCourses.filter((course) => {
+            const matchCategory = (filterCategory === 'all' || course.category === filterCategory);
+            const matchGrade = (filterGrade === 'all' || course.grade === filterGrade);
+            return matchCategory && matchGrade;
+        });
+
+        // 🌟 核心計算：即時計算當前篩選狀態下的總學分
+        const currentTotalCredits = filteredCourses.reduce((sum, course) => sum + (course.credits || 0), 0);
+        document.getElementById('filteredTotal').textContent = `合計：${currentTotalCredits} 學分`;
+
+        if (filteredCourses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">目前無相符的課程。</td></tr>`;
+            return;
+        }
+
+        filteredCourses.forEach((course) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><span class="grade-badge">${gradeMap[course.grade] || "大一上"}</span></td>
+                <td><strong>${course.name}</strong></td>
+                <td>${categoryMap[course.category] || "未歸類"}</td>
+                <td>${course.credits} 學分</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-table-edit" onclick="startEditCourse(${course.originalIndex})">編輯</button>
+                        <button class="btn-delete" onclick="deleteCourse(${course.originalIndex})">刪除</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function startEditCourse(originalIndex) {
+        editTargetIndex = originalIndex;
+        const course = courses[originalIndex];
+        document.getElementById('courseName').value = course.name;
+        document.getElementById('courseGrade').value = course.grade;
+        document.getElementById('courseCategory').value = course.category;
+        document.getElementById('courseCredits').value = course.credits;
+        document.getElementById('formCard').classList.add('editing-mode');
+        document.getElementById('formTitle').textContent = "✏️ 正在編輯課程";
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = "更新並儲存課程";
+        submitBtn.classList.add('btn-edit-mode');
+        document.getElementById('cancelBtn').style.display = "block";
+    }
+
+    function cancelEdit() {
+        editTargetIndex = null;
+        document.getElementById('courseName').value = '';
+        document.getElementById('courseCredits').value = '3';
+        document.getElementById('formCard').classList.remove('editing-mode');
+        document.getElementById('formTitle').textContent = "新增課程數據";
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = "儲存並新增課程";
+        submitBtn.classList.remove('btn-edit-mode');
+        document.getElementById('cancelBtn').style.display = "none";
+    }
+
+    function handleSubmit() {
+        const nameInput = document.getElementById('courseName');
+        const gradeInput = document.getElementById('courseGrade');
+        const categoryInput = document.getElementById('courseCategory');
+        const creditsInput = document.getElementById('courseCredits');
+
+        const name = nameInput.value.trim();
+        const grade = gradeInput.value;
+        const category = categoryInput.value;
+        const credits = parseFloat(creditsInput.value) || 0;
+
+        if (!name) { alert('請輸入課程名稱！'); return; }
+        if (credits <= 0) { alert('學分數必須大於 0！'); return; }
+
+        if (editTargetIndex !== null) {
+            courses[editTargetIndex] = { name, grade, category, credits };
+            editTargetIndex = null;
+            alert('課程資料更新成功！');
+        } else {
+            courses.push({ name, grade, category, credits });
+        }
+
+        localStorage.setItem('academic_courses', JSON.stringify(courses));
+        cancelEdit();
+        renderTable();
+    }
+
+    function deleteCourse(originalIndex) {
+        if (editTargetIndex === originalIndex) {
+            alert('此課程正在編輯中，請先點擊「取消修改」再進行刪除。');
+            return;
+        }
+        courses.splice(originalIndex, 1);
+        localStorage.setItem('academic_courses', JSON.stringify(courses));
+        renderTable();
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
