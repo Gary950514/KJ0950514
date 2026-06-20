@@ -26,7 +26,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
         }
 
@@ -61,7 +61,7 @@
 
         .main-layout {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 320px 1fr;
             gap: 25px;
             margin-bottom: 30px;
         }
@@ -202,11 +202,15 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
+            table-layout: fixed; /* 🌟 啟用固定寬度佈局，確保設定的欄位寬度百分之百生效 */
         }
 
         th, td {
             padding: 12px 15px;
             border-bottom: 1px solid #edf2f7;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap; /* 防止名稱過長時換行折疊 */
         }
 
         th {
@@ -214,6 +218,13 @@
             color: #666;
             font-weight: 600;
         }
+
+        /* 🌟 明確指定每一欄的寬度佔比 */
+        th:nth-child(1), td:nth-child(1) { width: 100px; } /* 學期 */
+        th:nth-child(2), td:nth-child(2) { width: auto; }  /* 課程名稱（彈性自由延伸） */
+        th:nth-child(3), td:nth-child(3) { width: 160px; } /* 類別 */
+        th:nth-child(4), td:nth-child(4) { width: 120px; } /* 學分（特別拉寬，不怕擠壓） */
+        th:nth-child(5), td:nth-child(5) { width: 120px; } /* 操作按鈕 */
 
         .grade-badge {
             background-color: #e8f4fd;
@@ -259,7 +270,6 @@
             color: white;
         }
 
-        /* 🌟 新增：頁尾聯絡資訊卡片樣式（靠右側排版） */
         .contact-footer {
             background: var(--card-bg);
             border-radius: 12px;
@@ -270,10 +280,10 @@
         }
 
         .contact-footer p {
-    margin: 6px 0;
-    font-size: 0.95rem;
-    color: #64748b;
-    text-align: center;
+            margin: 6px 0;
+            font-size: 0.95rem;
+            color: #64748b;
+            text-align: center;
         }
 
         .contact-footer a {
@@ -298,6 +308,8 @@
             .main-layout { grid-template-columns: 1fr; }
             .table-header-area { flex-direction: column; align-items: flex-start; }
             .contact-footer { text-align: center; }
+            table { table-layout: auto; } /* 手機板改回自動適應 */
+            th:nth-child(4), td:nth-child(4) { width: auto; }
         }
     </style>
 </head>
@@ -357,7 +369,7 @@
 
         <div class="table-card">
             <div class="table-header-area">
-                <h2>已登錄課程清單 <span id="filteredTotal" class="header-total-badge">總計：0 學分</span></h2>
+                <h2>已登錄課程清單 <span id="filteredTotal" class="header-total-badge">總計：0 學分 (不含跨領域)</span></h2>
                 
                 <div class="filter-controls">
                     <div class="filter-group">
@@ -403,7 +415,7 @@
                     </tr>
                 </thead>
                 <tbody id="courseTableBody">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>
@@ -452,8 +464,15 @@
             return matchCategory && matchGrade;
         });
 
-        const currentTotalCredits = filteredCourses.reduce((sum, course) => sum + (course.credits || 0), 0);
-        document.getElementById('filteredTotal').textContent = `合計：${currentTotalCredits} 學分`;
+        // 計算當前篩選下的總學分時，排除跨領域學分 (inter_dis)
+        const currentTotalCredits = filteredCourses.reduce((sum, course) => {
+            if (course.category === 'inter_dis') {
+                return sum; 
+            }
+            return sum + (course.credits || 0);
+        }, 0);
+        
+        document.getElementById('filteredTotal').textContent = `合計：${currentTotalCredits} 學分 (不含跨領域)`;
 
         if (filteredCourses.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">目前無相符的課程。</td></tr>`;
