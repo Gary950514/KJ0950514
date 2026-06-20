@@ -87,6 +87,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
+            margin-bottom: 30px;
         }
 
         .course-card {
@@ -153,6 +154,40 @@
         .status-text.completed {
             color: var(--success-color);
             font-weight: bold;
+        }
+
+        /* 頁尾聯絡資訊卡片樣式 */
+        .contact-footer {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            text-align: center;
+            border-top: 3px solid #cbd5e1;
+        }
+
+        .contact-footer p {
+            margin: 6px 0;
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+
+        .contact-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+
+        .contact-footer a:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .copyright {
+            font-size: 0.8rem !important;
+            color: #94a3b8 !important;
+            margin-top: 15px !important;
         }
     </style>
 </head>
@@ -256,11 +291,17 @@
         </div>
 
     </div>
+
+    <footer class="contact-footer">
+        <p>如有任何使用問題、錯誤回報或功能建議，歡迎聯絡作者！</p>
+        <p>📬 作者：王凱均 | 信箱：<a href="mailto:r61621116@gmail.com">r61621116@gmail.com</a></p>
+        <p class="copyright">© 2026 學分審查計算機系統. All rights reserved.</p>
+    </footer>
+
 </div>
 
 <script>
     const targets = {
-
         gen_req: 31, col_req: 14, maj_req: 44, maj_ele: 39,
         inter_dis: 15, gen_ele: 9, prog_1: 18, prog_2: 18
     };
@@ -280,26 +321,21 @@
         courses.forEach(course => {
             const credits = course.credits;
             
-            // 1. 先歸類到原始選擇的類別
             if (earnedSums.hasOwnProperty(course.category)) {
                 earnedSums[course.category] += credits;
             }
 
-            // 🌟 邏輯優化 1：如果這門課是「學程1」或「學程2」，同步加進「最低專業選修」
             if (course.category === 'prog_1' || course.category === 'prog_2') {
                 earnedSums['maj_ele'] += credits;
             }
 
-            // 🌟 新增邏輯 2：如果這門課是「通識選修」，同步加進「通識必修」
             if (course.category === 'gen_ele') {
                 earnedSums['gen_req'] += credits;
             }
 
-            // 2. 計算「實際總學分」（確保不重複計算總學分）
             totalEarned += credits;
         });
 
-        // 更新各類別卡片視覺與進度
         for (let cat in targets) {
             const required = targets[cat];
             const earned = earnedSums[cat];
@@ -322,7 +358,6 @@
             }
         }
 
-        // 更新上方大總進度面板
         document.getElementById('total-earned').textContent = totalEarned;
         const totalPercentage = Math.min((totalEarned / totalRequired) * 100, 100).toFixed(1);
         document.getElementById('total-progress').style.width = `${totalPercentage}%`;
